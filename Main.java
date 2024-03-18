@@ -104,7 +104,7 @@ class LexiacalAnalyser {
         while ((line = bufferedReader.readLine()) != null) {
             try {
                 String trimmedLine = line.trim();
-                System.out.println(trimmedLine.length());
+                // System.out.println(trimmedLine.length());
                 scanLine(trimmedLine);
                 lineNumber++;
             } catch (AnalyserException e) {
@@ -131,17 +131,18 @@ class LexiacalAnalyser {
         Pattern stringPattern = Pattern.compile(String.format("''(%s|%s|%s|%s|%s|%s)*''", letters, digits, operators,
                 escapeCharacters, "(\s|\t)+", "[(),;]"));
         Pattern commentPattern = Pattern
-                .compile(String.format("//(\"|(|)|;|,|\\|\s|\t|%s|%s|%s)*", letters, digits, operators));
+                .compile("//.*");
 
         int currentCharIndex = 0;
 
         while (currentCharIndex < line.length()) {
             char currentCharacter = line.charAt(currentCharIndex);
             String charAsString = String.valueOf(currentCharacter);
-
+            String currentSubString = line.substring(currentCharIndex);
             // Comment found
             Matcher commentMatcher = commentPattern.matcher(line.substring(currentCharIndex));
             if (commentMatcher.find()) {
+                String matchGroup = commentMatcher.group();
                 currentCharIndex += commentMatcher.group().length();
                 continue;
             }
@@ -158,7 +159,7 @@ class LexiacalAnalyser {
             if (identiferMatcher.find()) {
                 String identifier = identiferMatcher.group();
                 String[] keywords = { "let", "in", "fn", "where", "aug", "or", "not", "gr", "ge", "ls",
-                        "le", "eq", "ne", "true", "false", "nil", "dummy", "within", "and", "rec" };
+                        "le", "eq", "ne", "true", "false", "nil", "dummy", "within", "and", "rec", "Sum" };
 
                 if (Arrays.asList(keywords).contains(identifier)) {
                     tokens.add(new Token(TokenType.KEYWORD, identifier));
@@ -189,24 +190,30 @@ class LexiacalAnalyser {
                 continue;
             }
 
-            //Strings found
+            // Strings found
             Matcher stringMatcher = stringPattern.matcher(line.substring(currentCharIndex));
-            if(stringMatcher.find())
-            {
+            if (stringMatcher.find()) {
                 String str = stringMatcher.group();
                 tokens.add(new Token(TokenType.STRING, str));
                 currentCharIndex += str.length();
                 continue;
             }
+            //Punctuation found updated
 
-            //Punctuation found
-            if(",;".contains(charAsString))
-            {
-                tokens.add(new Token(TokenType.PUNCTUATION, charAsString));
-                currentCharIndex++;
+            Matcher punctuationMatcher = punctuationPattern.matcher((line.substring(currentCharacter)));
+            if(punctuationMatcher.find()){
+                String punch = punctuationMatcher.group();
+                tokens.add(new Token(TokenType.PUNCTUATION, punch));
+                currentCharIndex+= punch.length();
                 continue;
             }
-            throw new AnalyserException("Unable identify character "+charAsString+" at index "+currentCharIndex);
+            // Punctuation found
+            // if (",;".contains(charAsString)) {
+            //     tokens.add(new Token(TokenType.PUNCTUATION, charAsString));
+            //     currentCharIndex++;
+            //     continue;
+            // }
+            throw new AnalyserException("Unable identify character " + charAsString + " at index " + currentCharIndex);
         }
     }
-}
+}-
